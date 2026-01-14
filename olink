@@ -1,0 +1,430 @@
+!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Ultra Nexus - ศูนย์บัญชาการวิเคราะห์ชีวภาพ</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Prompt:wght@100;300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --neon-gold: #ffcc33;
+            --neon-blue: #00f2fe;
+            --neon-red: #ff0044;
+            --dark-void: #020205;
+            --glass: rgba(10, 15, 25, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--dark-void);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 2000px;
+        }
+
+        /* Particles Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -3;
+            background: radial-gradient(circle at center, #0a101a 0%, #020205 100%);
+        }
+
+        /* 3D Moving Grid */
+        .grid-3d {
+            position: fixed;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background-image: 
+                linear-gradient(rgba(0, 242, 254, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.05) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: rotateX(60deg) translateZ(-200px);
+            z-index: -2;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { transform: rotateX(60deg) translateY(0); }
+            to { transform: rotateX(60deg) translateY(60px); }
+        }
+
+        /* Scanline FX */
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Main Nexus Container */
+        .nexus-wrapper {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        .hud-card {
+            background: var(--glass);
+            backdrop-filter: blur(40px);
+            border: 2px solid rgba(0, 242, 254, 0.2);
+            padding: 3rem;
+            width: 480px;
+            border-radius: 30px;
+            position: relative;
+            box-shadow: 0 0 100px rgba(0, 242, 254, 0.1),
+                        inset 0 0 30px rgba(212, 175, 55, 0.05);
+            clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
+        }
+
+        .hud-card::before {
+            content: "NEXUS_OS_CORE_v3.9";
+            position: absolute;
+            top: 10px; right: 40px;
+            font-family: 'Orbitron';
+            font-size: 8px;
+            color: var(--neon-blue);
+            letter-spacing: 2px;
+            opacity: 0.5;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .title-main {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--neon-gold), #fff, var(--neon-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 6px;
+            filter: drop-shadow(0 0 10px rgba(255, 204, 51, 0.4));
+        }
+
+        .subtitle {
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        /* Input Cyber-Design */
+        .cyber-input-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .cyber-label {
+            font-family: 'Orbitron', 'Prompt';
+            font-size: 0.65rem;
+            color: var(--neon-gold);
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            padding: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            color: var(--neon-blue);
+            outline: none;
+            transition: 0.4s;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .input-field:focus {
+            background: rgba(0, 242, 254, 0.05);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+        }
+
+        /* Action Button */
+        .btn-nexus {
+            width: 100%;
+            padding: 1.5rem;
+            background: transparent;
+            border: 2px solid var(--neon-gold);
+            color: var(--neon-gold);
+            font-family: 'Orbitron', 'Prompt';
+            font-weight: 900;
+            font-size: 1rem;
+            letter-spacing: 5px;
+            position: relative;
+            z-index: 1;
+            transition: 0.5s;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .btn-nexus:hover {
+            color: #000;
+            background: var(--neon-gold);
+            box-shadow: 0 0 40px var(--neon-gold);
+        }
+
+        /* Result Display อลังการ */
+        #resultNexus {
+            display: none;
+            margin-top: 3rem;
+            animation: powerOn 0.6s ease-out forwards;
+        }
+
+        @keyframes powerOn {
+            0% { opacity: 0; transform: scaleY(0); filter: brightness(5); }
+            100% { opacity: 1; transform: scaleY(1); filter: brightness(1); }
+        }
+
+        .bmi-value-huge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5.5rem;
+            font-weight: 900;
+            text-align: center;
+            line-height: 1;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px currentColor;
+        }
+
+        .status-nexus {
+            padding: 1rem;
+            border: 1px solid;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 1.5rem;
+            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+        }
+
+        .analysis-text {
+            font-size: 0.9rem;
+            text-align: center;
+            color: #aaa;
+            line-height: 1.8;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 1.5rem;
+        }
+
+        /* Corner Decos */
+        .nexus-deco {
+            position: absolute;
+            width: 40px; height: 40px;
+            border: 2px solid var(--neon-blue);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .lt { top: -10px; left: -10px; border-right: none; border-bottom: none; }
+        .rb { bottom: -10px; right: -10px; border-left: none; border-top: none; }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particleCanvas"></canvas>
+    <div class="grid-3d"></div>
+    <div class="scanline"></div>
+
+    <div class="nexus-wrapper" id="nexusWrapper">
+        <div class="hud-card">
+            <div class="nexus-deco lt"></div>
+            <div class="nexus-deco rb"></div>
+
+            <header class="header-section">
+                <h1 class="title-main">ULTRA_NEXUS</h1>
+                <p class="subtitle">ระบบประมวลผลดัชนีชีวภาพขั้นสูง</p>
+            </header>
+
+            <div class="cyber-input-group">
+                <label class="cyber-label">BODY_WEIGHT_INDEX (กิโลกรัม)</label>
+                <div class="input-box">
+                    <input type="number" id="weight" class="input-field" placeholder="00.0" step="0.1">
+                </div>
+            </div>
+
+            <div class="cyber-input-group">
+                <label class="cyber-label">BODY_HEIGHT_INDEX (เซนติเมตร)</label>
+                <div class="input-box">
+                    <input type="number" id="height" class="input-field" placeholder="000.0" step="0.1">
+                </div>
+            </div>
+
+            <button class="btn-nexus" onclick="initiateNexusScan()">
+                INITIALIZE_CORE_SCAN
+            </button>
+
+            <div id="resultNexus">
+                <div class="result-header text-center text-xs opacity-50 mb-2 font-mono">SCAN_COMPLETE: 100%</div>
+                <div class="bmi-value-huge" id="bmiVal">0.0</div>
+                <div id="statusTag" class="status-nexus">OPTIMIZING...</div>
+                
+                <p id="analysis" class="analysis-text"></p>
+                
+                <div class="mt-4 flex justify-between font-mono text-[8px] opacity-40 uppercase tracking-widest">
+                    <span>Cpu_Load: 24%</span>
+                    <span>Encrypted: AES-256</span>
+                    <span>Lat: 0.002ms</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Particles Background System ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random();
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(0, 242, 254, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // --- 2. 3D Tilt Effect ---
+        const wrapper = document.getElementById('nexusWrapper');
+        document.addEventListener('mousemove', (e) => {
+            let xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            let yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            wrapper.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // --- 3. Scan Logic ---
+        function initiateNexusScan() {
+            const w = parseFloat(document.getElementById('weight').value);
+            const h = parseFloat(document.getElementById('height').value);
+
+            if (!w || !h) {
+                alert("CRITICAL_ERROR: NULL_DATA_STREAM");
+                return;
+            }
+
+            const btn = document.querySelector('.btn-nexus');
+            btn.innerHTML = "DATA_PROCESSING...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const bmi = (w / ((h/100) * (h/100))).toFixed(1);
+                displayResults(bmi);
+                btn.innerHTML = "INITIALIZE_CORE_SCAN";
+                btn.disabled = false;
+            }, 1000);
+        }
+
+        function displayResults(bmi) {
+            const resultArea = document.getElementById('resultNexus');
+            const bmiDisplay = document.getElementById('bmiVal');
+            const status = document.getElementById('statusTag');
+            const analysis = document.getElementById('analysis');
+            
+            resultArea.style.display = 'block';
+            
+            // Counter Animate
+            let current = 0;
+            const target = parseFloat(bmi);
+            const timer = setInterval(() => {
+                current += 0.5;
+                if (current >= target) {
+                    bmiDisplay.innerText = target.toFixed(1);
+                    clearInterval(timer);
+                } else {
+                    bmiDisplay.innerText = current.toFixed(1);
+                }
+            }, 20);
+
+            let label, color, desc;
+
+            if (target < 18.5) {
+                label = "CRITICAL: UNDER_MASS";
+                color = "#ff0044";
+                desc = "ระบบตรวจพบภาวะมวลร่างกายต่ำกว่าเกณฑ์มาตรฐาน แนะนำให้เพิ่มการดูดซึมสารอาหารกลุ่มโปรตีนและแคลอรี่เพื่อเสถียรภาพของร่างกาย";
+            } else if (target < 23) {
+                label = "CORE_STABLE: OPTIMAL";
+                color = "#00f2fe";
+                desc = "ยินดีด้วย! ร่างกายของคุณอยู่ในระดับ 'สมดุลสูงสุด' ระบบการทำงานของชีวภาพทำงานได้อย่างมีประสิทธิภาพมากที่สุดในขณะนี้";
+            } else if (target < 25) {
+                label = "WARNING: EXCESS_MASS";
+                color = "#ffcc33";
+                desc = "ระบบเริ่มตรวจพบการสะสมของพลังงานส่วนเกิน แนะนำให้รักษาสมดุลด้วยการเผาผลาญพลังงาน (Active Exercises) อย่างต่อเนื่อง";
+            } else {
+                label = "DANGER: CRITICAL_OVERLOAD";
+                color = "#ff0000";
+                desc = "ตรวจพบสภาวะโอเวอร์โหลดของมวลไขมัน! มีความเสี่ยงต่อระบบหมุนเวียนโลหิตและหัวใจระดับสูง โปรดเข้ารับการปรับจูนจากผู้เชี่ยวชาญทันที";
+            }
+
+            setTimeout(() => {
+                status.innerText = label;
+                status.style.color = color;
+                status.style.borderColor = color;
+                status.style.boxShadow = `0 0 20px ${color}44`;
+                bmiDisplay.style.color = color;
+                analysis.innerText = desc;
+            }, 300);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        animateParticles();
+    </script>
+</body>
+</html>
